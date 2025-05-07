@@ -1,6 +1,7 @@
 using System.Diagnostics;
 using Microsoft.AspNetCore.Mvc;
 using MenaAyalaRamos_ConexionChatbot.Models;
+using MenaAyalaRamos_ConexionChatbot.Repositories;
 
 namespace MenaAyalaRamos_ConexionChatbot.Controllers;
 
@@ -13,9 +14,11 @@ public class HomeController : Controller
         _logger = logger;
     }
 
-    public IActionResult Index()
+    public async Task<IActionResult> Index()
     {
-        return View();
+        GeminiRepository repo = new GeminiRepository();
+        string answer = await repo.GetResponse("¿encontraste la lost media perdida, o los 12 contextos del patrón");
+        return View(answer);
     }
 
     public IActionResult Privacy()
