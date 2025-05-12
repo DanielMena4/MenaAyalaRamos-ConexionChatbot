@@ -3,7 +3,5 @@
     public interface IChatbotServices
     {
         public Task<string> GetResponse(string prompt);
-
-
     }
 }

@@ -2,22 +2,24 @@ using System.Diagnostics;
 using Microsoft.AspNetCore.Mvc;
 using MenaAyalaRamos_ConexionChatbot.Models;
 using MenaAyalaRamos_ConexionChatbot.Repositories;
+using MenaAyalaRamos_ConexionChatbot.Interfaces;
 
 namespace MenaAyalaRamos_ConexionChatbot.Controllers;
 
 public class HomeController : Controller
 {
     private readonly ILogger<HomeController> _logger;
+    private readonly IChatbotServices _chatbotServices;
 
-    public HomeController(ILogger<HomeController> logger)
+    public HomeController(ILogger<HomeController> logger, IChatbotServices chatbotService)
     {
         _logger = logger;
+        _chatbotServices = chatbotService;
     }
 
     public async Task<IActionResult> Index()
     {
-        GeminiRepository repo = new GeminiRepository();
-        string answer = await repo.GetResponse("¿encontraste la lost media perdida, o los 12 contextos del patrón");
+        string answer = await _chatbotServices.GetResponse("hola");
         return View(answer);
     }
 

@@ -1,7 +1,12 @@
+using MenaAyalaRamos_ConexionChatbot.Interfaces;
+using MenaAyalaRamos_ConexionChatbot.Repositories;
+
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 builder.Services.AddControllersWithViews();
+
+builder.Services.AddSingleton<IChatbotServices, GeminiRepository>();
 
 var app = builder.Build();
 
