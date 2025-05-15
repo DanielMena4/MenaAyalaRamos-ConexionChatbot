@@ -1,24 +1,25 @@
-using MenaAyalaRamos_ConexionChatbot.Interfaces;
-using MenaAyalaRamos_ConexionChatbot.Models;
-using Microsoft.AspNetCore.Mvc;
-using System.Diagnostics;
+    using MenaAyalaRamos_ConexionChatbot.Interfaces;
+    using MenaAyalaRamos_ConexionChatbot.Models;
+    using Microsoft.AspNetCore.Mvc;
+    using System.Diagnostics;
+using System.Text.Json;
 
-public class HomeController : Controller
-{
-    private readonly ILogger<HomeController> _logger;
-    private readonly IChatbotServices _chatbotServices;
-
-    public HomeController(ILogger<HomeController> logger, IChatbotServices chatbotServices)
+    public class HomeController : Controller
     {
-        _logger = logger;
-        _chatbotServices = chatbotServices;
-    }
+        private readonly ILogger<HomeController> _logger;
+        private readonly IChatbotServices _chatbotServices;
 
-    [HttpGet]
-    public IActionResult Index()
-    {
-        return View();
-    }
+        public HomeController(ILogger<HomeController> logger, IChatbotServices chatbotServices)
+        {
+            _logger = logger;
+            _chatbotServices = chatbotServices;
+        }
+
+        [HttpGet]
+        public IActionResult Index()
+        {
+            return View();
+        }
 
     [HttpPost]
     public async Task<IActionResult> Index(string prompt)
@@ -28,19 +29,28 @@ public class HomeController : Controller
             return View();
         }
 
-        string answer = await _chatbotServices.GetResponse(prompt);
-        ViewBag.Respuesta = answer;
-        return View();
-    }
+        string rawResponse = await _chatbotServices.GetResponse(prompt);
 
-    public IActionResult Privacy()
-    {
-        return View();
-    }
+        string respuestaSimple;
 
-    [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
-    public IActionResult Error()
-    {
-        return View(new ErrorViewModel { RequestId = Activity.Current?.Id ?? HttpContext.TraceIdentifier });
+        try
+        {
+            using JsonDocument doc = JsonDocument.Parse(rawResponse);
+            var root = doc.RootElement;
+
+            respuestaSimple = root.GetProperty("candidates")[0]
+                                 .GetProperty("content")
+                                 .GetProperty("parts")[0]
+                                 .GetProperty("text")
+                                 .GetString() ?? "No se obtuvo respuesta";
+        }
+        catch
+        {
+            respuestaSimple = "Error al procesar la respuesta.";
+        }
+
+        ViewBag.Respuesta = respuestaSimple;
+        return View();
     }
 }
+

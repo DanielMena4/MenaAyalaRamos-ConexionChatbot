@@ -35,7 +35,7 @@ namespace MenaAyalaRamos_ConexionChatbot.Repositories
                 }
             };
             message.Content = JsonContent.Create<GeminiRequest>(request);
-
+                
             var response = await _httpClient.SendAsync(message);
             string answer = await response.Content.ReadAsStringAsync();
 
@@ -43,3 +43,4 @@ namespace MenaAyalaRamos_ConexionChatbot.Repositories
         }
     }
 }
+    
