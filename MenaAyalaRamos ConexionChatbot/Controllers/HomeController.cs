@@ -25,7 +25,6 @@ public class HomeController : Controller
     {
         if (string.IsNullOrWhiteSpace(prompt))
         {
-            ModelState.AddModelError(string.Empty, "Por favor, ingresa una pregunta.");
             return View();
         }
 
