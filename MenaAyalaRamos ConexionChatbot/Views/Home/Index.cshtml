@@ -1,8 +1,16 @@
 ﻿@{
-    ViewData["Title"] = "Home Page";
+    ViewData["Title"] = "Chatbot";
 }
 
-<div class="text-center">
-    <h1 class="display-4">Welcome</h1>
-    <p>Learn about <a href="https://learn.microsoft.com/aspnet/core">building Web apps with ASP.NET Core</a>.</p>
-</div>
+<h2>Hazle una pregunta al JosueDanielJorge</h2>
+
+<form method="post">
+    <input type="text" name="prompt" placeholder="Escribe tu pregunta aquí" style="width: 300px;" />
+    <button type="submit">Enviar</button>
+</form>
+
+@if (!string.IsNullOrEmpty(ViewBag.Respuesta as string))
+{
+    <h3>Respuesta del Chatbot:</h3>
+    <p>@ViewBag.Respuesta</p>
+}

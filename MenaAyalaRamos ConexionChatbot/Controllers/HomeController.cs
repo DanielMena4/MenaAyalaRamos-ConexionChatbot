@@ -1,26 +1,37 @@
-using System.Diagnostics;
-using Microsoft.AspNetCore.Mvc;
-using MenaAyalaRamos_ConexionChatbot.Models;
-using MenaAyalaRamos_ConexionChatbot.Repositories;
 using MenaAyalaRamos_ConexionChatbot.Interfaces;
-
-namespace MenaAyalaRamos_ConexionChatbot.Controllers;
+using MenaAyalaRamos_ConexionChatbot.Models;
+using Microsoft.AspNetCore.Mvc;
+using System.Diagnostics;
 
 public class HomeController : Controller
 {
     private readonly ILogger<HomeController> _logger;
     private readonly IChatbotServices _chatbotServices;
 
-    public HomeController(ILogger<HomeController> logger, IChatbotServices chatbotService)
+    public HomeController(ILogger<HomeController> logger, IChatbotServices chatbotServices)
     {
         _logger = logger;
-        _chatbotServices = chatbotService;
+        _chatbotServices = chatbotServices;
     }
 
-    public async Task<IActionResult> Index()
+    [HttpGet]
+    public IActionResult Index()
     {
-        string answer = await _chatbotServices.GetResponse("hola");
-        return View(answer);
+        return View();
+    }
+
+    [HttpPost]
+    public async Task<IActionResult> Index(string prompt)
+    {
+        if (string.IsNullOrWhiteSpace(prompt))
+        {
+            ModelState.AddModelError(string.Empty, "Por favor, ingresa una pregunta.");
+            return View();
+        }
+
+        string answer = await _chatbotServices.GetResponse(prompt);
+        ViewBag.Respuesta = answer;
+        return View();
     }
 
     public IActionResult Privacy()
