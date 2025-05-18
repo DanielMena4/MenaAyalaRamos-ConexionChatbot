@@ -2,7 +2,7 @@
     using MenaAyalaRamos_ConexionChatbot.Models;
     using Microsoft.AspNetCore.Mvc;
     using System.Diagnostics;
-using System.Text.Json;
+    using System.Text.Json;
 
     public class HomeController : Controller
     {
@@ -38,17 +38,30 @@ using System.Text.Json;
             using JsonDocument doc = JsonDocument.Parse(rawResponse);
             var root = doc.RootElement;
 
-            respuestaSimple = root.GetProperty("candidates")[0]
-                                 .GetProperty("content")
-                                 .GetProperty("parts")[0]
-                                 .GetProperty("text")
-                                 .GetString() ?? "No se obtuvo respuesta";
+            if (root.TryGetProperty("candidates", out JsonElement candidates))
+            {
+                respuestaSimple = candidates[0]
+                    .GetProperty("content")
+                    .GetProperty("parts")[0]
+                    .GetProperty("text")
+                    .GetString() ?? "No se obtuvo respuesta";
+            }
+            else if (root.TryGetProperty("choices", out JsonElement choices))
+            {
+                respuestaSimple = choices[0]
+                    .GetProperty("message")
+                    .GetProperty("content")
+                    .GetString() ?? "No se obtuvo respuesta";
+            }
+            else
+            {
+                respuestaSimple = "Estructura de respuesta desconocida.";
+            }
         }
-        catch
+        catch (Exception ex)
         {
-            respuestaSimple = "Error al procesar la respuesta.";
+            respuestaSimple = $"Error al procesar la respuesta: {ex.Message}";
         }
-
         ViewBag.Respuesta = respuestaSimple;
         return View();
     }
