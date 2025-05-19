@@ -23,10 +23,10 @@ namespace MenaAyalaRamos_ConexionChatbot.Repositories
 
             TogetherAiRequest request = new TogetherAiRequest
             {
-                model = "meta-llama/Llama-4-Maverick-17B-128E-Instruct-FP8",
-                messages = new List<Message>
+                model = "deepseek-ai/DeepSeek-V3",
+                messages = new List<message>
                 {
-                    new Message
+                    new message
                     {
                         role = "user",
                         content = prompt
