@@ -1,18 +1,23 @@
+using MenaAyalaRamos_ConexionChatbot.Data;
 using MenaAyalaRamos_ConexionChatbot.Interfaces;
 using MenaAyalaRamos_ConexionChatbot.Models;
+using MenaAyalaRamos_ConexionChatbot.Models.MenaAyalaRamos_ConexionChatbot.Models;
 using MenaAyalaRamos_ConexionChatbot.Repositories;
 using Microsoft.AspNetCore.Mvc;
+using System;
 using System.Text.Json;
 
 public class HomeController : Controller
 {
     private readonly ILogger<HomeController> _logger;
     private readonly IChatbotServices _chatbotServices;
+    private readonly ChatDbContext _dbContext;
 
-    public HomeController(ILogger<HomeController> logger, IChatbotServices chatbotServices)
+    public HomeController(ILogger<HomeController> logger, IChatbotServices chatbotServices, ChatDbContext dbContext)
     {
         _logger = logger;
         _chatbotServices = chatbotServices;
+        _dbContext = dbContext;
     }
 
     [HttpGet]
@@ -49,6 +54,16 @@ public class HomeController : Controller
                         .GetProperty("message")
                         .GetProperty("content")
                         .GetString() ?? "No se obtuvo respuesta";
+                    var chat = new ChatInteraction
+                    {
+                        Prompt = prompt,
+                        Response = respuestaSimple,
+                        Provider = "TogetherAI",
+                        TokensUsed = root.GetProperty("usage").GetProperty("total_tokens").GetInt32(),
+                        Timestamp = DateTime.Now
+                    };
+                    _dbContext.ChatInteractions.Add(chat);
+                    await _dbContext.SaveChangesAsync();
                 }
                 else
                 {
@@ -69,6 +84,16 @@ public class HomeController : Controller
                         .GetProperty("parts")[0]
                         .GetProperty("text")
                         .GetString() ?? "No se obtuvo respuesta";
+                    var chat = new ChatInteraction
+                    {
+                        Prompt = prompt,
+                        Response = respuestaSimple,
+                        Provider = "Gemini",
+                        TokensUsed = root.GetProperty("usage").GetProperty("total_tokens").GetInt32(),
+                        Timestamp = DateTime.Now
+                    };
+                    _dbContext.ChatInteractions.Add(chat);
+                    await _dbContext.SaveChangesAsync();
                 }
                 else
                 {
@@ -80,6 +105,8 @@ public class HomeController : Controller
         {
             respuestaSimple = $"Error al procesar la respuesta: {ex.Message}";
         }
+
+
 
         ViewBag.Respuesta = respuestaSimple;
         ViewBag.ChatbotSeleccionado = chatbot;

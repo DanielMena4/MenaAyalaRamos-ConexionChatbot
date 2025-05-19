@@ -1,10 +1,16 @@
+using System;
+using MenaAyalaRamos_ConexionChatbot.Data;
 using MenaAyalaRamos_ConexionChatbot.Interfaces;
 using MenaAyalaRamos_ConexionChatbot.Repositories;
+using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 builder.Services.AddControllersWithViews();
+
+builder.Services.AddDbContext<DbContext>(options =>
+options.UseSqlServer(builder.Configuration.GetConnectionString("Default")));
 
 builder.Services.AddSingleton<IChatbotServices, GeminiRepository>();
 
