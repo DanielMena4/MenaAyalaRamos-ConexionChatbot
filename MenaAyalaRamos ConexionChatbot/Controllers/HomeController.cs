@@ -37,6 +37,7 @@ public class HomeController : Controller
 
         string rawResponse = "";
         string respuestaSimple = "";
+        int tokens = 0;
 
         try
         {
@@ -48,57 +49,64 @@ public class HomeController : Controller
                 using JsonDocument doc = JsonDocument.Parse(rawResponse);
                 var root = doc.RootElement;
 
-                if (root.TryGetProperty("choices", out JsonElement choices))
+                if (root.TryGetProperty("choices", out JsonElement choices) &&
+                    choices.GetArrayLength() > 0)
                 {
                     respuestaSimple = choices[0]
                         .GetProperty("message")
                         .GetProperty("content")
                         .GetString() ?? "No se obtuvo respuesta";
-                    var chat = new ChatInteraction
+
+                    if (root.TryGetProperty("usage", out JsonElement usage) &&
+                        usage.TryGetProperty("total_tokens", out JsonElement totalTokens))
+                    {
+                        tokens = totalTokens.GetInt32();
+                    }
+
+                    _dbContext.ChatInteractions.Add(new ChatInteraction
                     {
                         Prompt = prompt,
                         Response = respuestaSimple,
                         Provider = "TogetherAI",
-                        TokensUsed = root.GetProperty("usage").GetProperty("total_tokens").GetInt32(),
+                        TokensUsed = tokens,
                         Timestamp = DateTime.Now
-                    };
-                    _dbContext.ChatInteractions.Add(chat);
+                    });
                     await _dbContext.SaveChangesAsync();
                 }
                 else
                 {
-                    respuestaSimple = "Estructura de respuesta desconocida.";
+                    respuestaSimple = "Estructura de respuesta desconocida (TogetherAI).";
                 }
             }
-            else
+            else 
             {
                 rawResponse = await _chatbotServices.GetResponse(prompt);
 
                 using JsonDocument doc = JsonDocument.Parse(rawResponse);
                 var root = doc.RootElement;
 
-                if (root.TryGetProperty("candidates", out JsonElement candidates))
+                if (root.TryGetProperty("candidates", out JsonElement candidates) &&
+                    candidates.GetArrayLength() > 0 &&
+                    candidates[0].TryGetProperty("content", out JsonElement content) &&
+                    content.TryGetProperty("parts", out JsonElement parts) &&
+                    parts.GetArrayLength() > 0 &&
+                    parts[0].TryGetProperty("text", out JsonElement texto))
                 {
-                    respuestaSimple = candidates[0]
-                        .GetProperty("content")
-                        .GetProperty("parts")[0]
-                        .GetProperty("text")
-                        .GetString() ?? "No se obtuvo respuesta";
-                    var chat = new ChatInteraction
-                    {
-                        Prompt = prompt,
-                        Response = respuestaSimple,
-                        Provider = "Gemini",
-                        TokensUsed = root.GetProperty("usage").GetProperty("total_tokens").GetInt32(),
-                        Timestamp = DateTime.Now
-                    };
-                    _dbContext.ChatInteractions.Add(chat);
-                    await _dbContext.SaveChangesAsync();
+                    respuestaSimple = texto.GetString() ?? "No se obtuvo respuesta";
                 }
                 else
                 {
-                    respuestaSimple = "Estructura de respuesta desconocida.";
+                    respuestaSimple = "Estructura de respuesta desconocida (Gemini).";
                 }
+                _dbContext.ChatInteractions.Add(new ChatInteraction
+                {
+                    Prompt = prompt,
+                    Response = respuestaSimple,
+                    Provider = "Gemini",
+                    TokensUsed = 0,
+                    Timestamp = DateTime.Now
+                });
+                await _dbContext.SaveChangesAsync();
             }
         }
         catch (Exception ex)
@@ -106,11 +114,8 @@ public class HomeController : Controller
             respuestaSimple = $"Error al procesar la respuesta: {ex.Message}";
         }
 
-
-
         ViewBag.Respuesta = respuestaSimple;
         ViewBag.ChatbotSeleccionado = chatbot;
-
         return View();
     }
 }

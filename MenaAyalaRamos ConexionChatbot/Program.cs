@@ -9,8 +9,9 @@ var builder = WebApplication.CreateBuilder(args);
 // Add services to the container.
 builder.Services.AddControllersWithViews();
 
-builder.Services.AddDbContext<DbContext>(options =>
+builder.Services.AddDbContext<ChatDbContext>(options =>
 options.UseSqlServer(builder.Configuration.GetConnectionString("Default")));
+
 
 builder.Services.AddSingleton<IChatbotServices, GeminiRepository>();
 
