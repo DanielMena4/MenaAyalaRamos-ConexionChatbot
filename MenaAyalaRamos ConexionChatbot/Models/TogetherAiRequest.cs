@@ -1,4 +1,6 @@
-﻿namespace MenaAyalaRamos_ConexionChatbot.Models
+﻿using System.ComponentModel.DataAnnotations;
+
+namespace MenaAyalaRamos_ConexionChatbot.Models
 {
     public class TogetherAiRequest
     {
@@ -10,6 +12,8 @@
             public string role { get; set; }
             public string content { get; set; }
         }
-
+        
+        [Key]
+        public int Id;
     }
 }

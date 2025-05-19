@@ -1,69 +1,89 @@
-    using MenaAyalaRamos_ConexionChatbot.Interfaces;
-    using MenaAyalaRamos_ConexionChatbot.Models;
-    using Microsoft.AspNetCore.Mvc;
-    using System.Diagnostics;
-    using System.Text.Json;
+using MenaAyalaRamos_ConexionChatbot.Interfaces;
+using MenaAyalaRamos_ConexionChatbot.Models;
+using MenaAyalaRamos_ConexionChatbot.Repositories;
+using Microsoft.AspNetCore.Mvc;
+using System.Text.Json;
 
-    public class HomeController : Controller
+public class HomeController : Controller
+{
+    private readonly ILogger<HomeController> _logger;
+    private readonly IChatbotServices _chatbotServices;
+
+    public HomeController(ILogger<HomeController> logger, IChatbotServices chatbotServices)
     {
-        private readonly ILogger<HomeController> _logger;
-        private readonly IChatbotServices _chatbotServices;
+        _logger = logger;
+        _chatbotServices = chatbotServices;
+    }
 
-        public HomeController(ILogger<HomeController> logger, IChatbotServices chatbotServices)
-        {
-            _logger = logger;
-            _chatbotServices = chatbotServices;
-        }
-
-        [HttpGet]
-        public IActionResult Index()
-        {
-            return View();
-        }
+    [HttpGet]
+    public IActionResult Index()
+    {
+        return View();
+    }
 
     [HttpPost]
-    public async Task<IActionResult> Index(string prompt)
+    public async Task<IActionResult> Index(string prompt, string chatbot)
     {
         if (string.IsNullOrWhiteSpace(prompt))
         {
+            ViewBag.Respuesta = "Por favor, ingresa una pregunta.";
             return View();
         }
 
-        string rawResponse = await _chatbotServices.GetResponse(prompt);
-
-        string respuestaSimple;
+        string rawResponse = "";
+        string respuestaSimple = "";
 
         try
         {
-            using JsonDocument doc = JsonDocument.Parse(rawResponse);
-            var root = doc.RootElement;
+            if (chatbot == "TogetherAI")
+            {
+                var chatTogetherAIService = new TogetherAIRepository();
+                rawResponse = await chatTogetherAIService.GetResponse(prompt);
 
-            if (root.TryGetProperty("candidates", out JsonElement candidates))
-            {
-                respuestaSimple = candidates[0]
-                    .GetProperty("content")
-                    .GetProperty("parts")[0]
-                    .GetProperty("text")
-                    .GetString() ?? "No se obtuvo respuesta";
-            }
-            else if (root.TryGetProperty("choices", out JsonElement choices))
-            {
-                respuestaSimple = choices[0]
-                    .GetProperty("message")
-                    .GetProperty("content")
-                    .GetString() ?? "No se obtuvo respuesta";
+                using JsonDocument doc = JsonDocument.Parse(rawResponse);
+                var root = doc.RootElement;
+
+                if (root.TryGetProperty("choices", out JsonElement choices))
+                {
+                    respuestaSimple = choices[0]
+                        .GetProperty("message")
+                        .GetProperty("content")
+                        .GetString() ?? "No se obtuvo respuesta";
+                }
+                else
+                {
+                    respuestaSimple = "Estructura de respuesta desconocida.";
+                }
             }
             else
             {
-                respuestaSimple = "Estructura de respuesta desconocida.";
+                rawResponse = await _chatbotServices.GetResponse(prompt);
+
+                using JsonDocument doc = JsonDocument.Parse(rawResponse);
+                var root = doc.RootElement;
+
+                if (root.TryGetProperty("candidates", out JsonElement candidates))
+                {
+                    respuestaSimple = candidates[0]
+                        .GetProperty("content")
+                        .GetProperty("parts")[0]
+                        .GetProperty("text")
+                        .GetString() ?? "No se obtuvo respuesta";
+                }
+                else
+                {
+                    respuestaSimple = "Estructura de respuesta desconocida.";
+                }
             }
         }
         catch (Exception ex)
         {
             respuestaSimple = $"Error al procesar la respuesta: {ex.Message}";
         }
+
         ViewBag.Respuesta = respuestaSimple;
+        ViewBag.ChatbotSeleccionado = chatbot;
+
         return View();
     }
 }
-

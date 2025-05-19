@@ -10,7 +10,7 @@ namespace MenaAyalaRamos_ConexionChatbot.Repositories
     public class TogetherAIRepository : IChatbotServices
     {
         private readonly HttpClient _httpClient;
-        private string apiKey = "4347dbe12518ffe873ab8bef5750e87326788ece51878cdb43511513d190967e"; 
+        private string apiKey = "4347dbe12518ffe873ab8bef5750e87326788ece51878cdb43511513d190967e";
 
         public TogetherAIRepository()
         {

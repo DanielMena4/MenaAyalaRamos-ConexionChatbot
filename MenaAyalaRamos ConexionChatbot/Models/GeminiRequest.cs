@@ -1,4 +1,6 @@
-﻿namespace MenaAyalaRamos_ConexionChatbot.Models
+﻿using System.ComponentModel.DataAnnotations;
+
+namespace MenaAyalaRamos_ConexionChatbot.Models
 {
     public class GeminiRequest
     {
@@ -14,6 +16,7 @@
             public List<Part> parts { get; set; }
         }
 
-        
+        [Key]
+        public int Id;
     }
 }
